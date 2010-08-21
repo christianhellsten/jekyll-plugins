@@ -1,0 +1,26 @@
+h1. Jekyll Plugins
+
+h2. Delicious
+
+This Jekyll plugin is used for fetching and rendering bookmarks from delicious.com.
+
+h3. Usage
+
+This will fetch the last 15 bookmarks tagged with 'design' from account 'x' and cache them for 3600 seconds:
+
+<pre><code>
+<ul class="delicious-links">
+  {% delicious username:x tag:design count:15 ttl:3600 %}
+  <li><a href="{{ item.link }}" title="{{ item.description }}" rel="external">{{ item.title }}</a></li>
+  {% enddelicious %}
+</ul>
+</code></pre>
+
+h4. Parameters
+
+|Name|Description|Example|
+|username|delicious username|jebus|
+|tag|delicious tag(s), separated by +|design, or design+tosite to fetch bookmarks tagged both design and tosite.|
+|count|Number of boomkarks to fetch|15|
+|ttl|The number of seconds the feed is cached|3600 caches the feed for one hour. Leave empty to always fetch feed.|
+
