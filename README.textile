@@ -1,5 +1,7 @@
 h1. Jekyll Plugins
 
+To install the plugins simply put them in a folder named _plugins in your project directory.
+
 h2. Delicious
 
 This Jekyll plugin is used for fetching and rendering bookmarks from delicious.com.
