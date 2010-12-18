@@ -2,6 +2,7 @@ require 'open-uri'
 require 'pp'
 require 'ostruct'
 require 'yaml'
+require 'jekyll'
 require 'hpricot'
 require 'digest/md5'
 
@@ -59,11 +60,11 @@ class CachedDelicious < Delicious
 #        p "old #{cache_file} #{age_in_seconds} < #{ttl}"
         result = super(username, name, count)
         File.open(cache_file, 'w') { |out| YAML.dump(result, out) }
-        result
       else
 #        p "fresh"
-        YAML::load_file(cache_file)
+        result = YAML::load_file(cache_file)
       end
+      result
     end
   end
 end
@@ -80,8 +81,8 @@ end
 # This will fetch the last 15 bookmarks tagged with 'design' from account 'x' and cache them for 3600 seconds.
 # 
 # Parameters:
-#   username: delicious username. For example: jebus.
-#   tag:      delicious tag. For example design. Separate multiple tags with a plus character. 
+#   username: delicious username. For example, jebus.
+#   tag:      delicious tag. For example, design. Separate multiple tags with a plus character. 
 #             For example, business+tosite, will fetch boomarks tagged both business and tosite.
 #   count:    The number of bookmarks to fetch.
 #   ttl:      The number of seconds to cache the feed. If not set, the feed will be fetched always.
@@ -152,3 +153,23 @@ end
 
 Liquid::Template.register_tag('delicious', Jekyll::DeliciousTag)
 
+if __FILE__ == $0
+  require 'test/unit'
+
+  class TC_MyTest < Test::Unit::TestCase
+    def setup
+      @result = Delicious::tag('37signals', 'svn', 5)
+    end
+
+    def test_size
+      assert_equal(@result.size, 5)
+    end
+
+    def test_bookmark
+      bookmark = @result.first
+      assert_equal(bookmark.title, 'Mike Rundle: "I now realize why larger weblogs are switching to WordPress...')
+      assert_equal(bookmark.description, "...when a site posts a dozen or more entries per day for the past few years, rebuilding the individual entry archives takes a long time. A long, long time. &amp;lt;strong&amp;gt;About 32 minutes each rebuild.&amp;lt;/strong&amp;gt;&amp;quot;")
+      assert_equal(bookmark.link, "http://businesslogs.com/business_logs/launch_a_socialites_life.php")
+    end
+  end
+end

@@ -26,3 +26,6 @@ h4. Parameters
 |count|Number of boomkarks to fetch|15|
 |ttl|The number of seconds the feed is cached|3600 caches the feed for one hour. Leave empty to always fetch feed.|
 
+h2. Author
+
+"Christian Hellsten":http://christianhellsten.com ("Aktagon Ltd.":http://aktagon.com)
