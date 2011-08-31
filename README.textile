@@ -53,7 +53,7 @@ h4. Parameters
 
 |Name|Description|Example|
 |host|status.net instance|identi.ca|
-||uid |your uid. You can seed it if you hover over the rss2.0-link on your profile-page|24126
+||uid |your uid. You can seed it if you hover over the rss2.0-link on your profile-page|24126|
 |count|Number of dents to fetch|15|
 |ttl|The number of seconds the feed is cached|3600 caches the feed for one hour. Leave empty to always fetch feed.|
 
