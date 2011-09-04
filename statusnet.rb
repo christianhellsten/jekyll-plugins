@@ -6,6 +6,8 @@ require 'jekyll'
 require 'hpricot'
 require 'date'
 require 'digest/md5'
+require 'action_view'
+include ActionView::Helpers::DateHelper
 
 # From http://api.rubyonrails.org/classes/ActiveSupport/CoreExtensions/Hash/Keys.html
 class Hash
@@ -16,41 +18,6 @@ class Hash
     self
   end
 end
-
-
-def timeago(time, options = {})
-   start_date = options.delete(:start_date) || Time.new
-   date_format = options.delete(:date_format) || :default
-   delta_minutes = (start_date.to_i - time.to_i).floor / 60
-   if delta_minutes.abs <= (8724*60)       
-     distance = distance_of_time_in_words(delta_minutes)       
-     if delta_minutes < 0
-        return "#{distance} from now"
-     else
-        return "#{distance} ago"
-     end
-   else
-      return "on #{DateTime.now.to_formatted_s(date_format)}"
-   end
- end
- def distance_of_time_in_words(minutes)
-   case
-     when minutes < 1
-       "less than a minute"
-     when minutes < 50
-       pluralize(minutes, "minute")
-     when minutes < 90
-       "about one hour"
-     when minutes < 1080
-       "#{(minutes / 60).round} hours"
-     when minutes < 1440
-       "one day"
-     when minutes < 2880
-       "about one day"
-     else
-       "#{(minutes / 1440).round} days"
-   end
- end
 
 
 
@@ -65,18 +32,16 @@ class Statusnet
       links = []
       url = "http://#{host}/api/statuses/user_timeline/#{uid}.rss"
       feed = Hpricot(open(url))
-      feed.search("item").each do |i|
+      feed.search("item").take(count.to_i).each do |i|
         item = OpenStruct.new
         item.link = i.at('link').next.to_s
         item.title = i.at('title').innerHTML
 	a=i.at('pubdate').innerHTML rescue nil
 	item.date=Date.parse(a)
-	item.day = item.date
+	item.day = time_ago_in_words(item.date)
         item.description  = i.at('description').to_plain_text rescue nil
-
         links << item
       end
-
       links
     end
   end
