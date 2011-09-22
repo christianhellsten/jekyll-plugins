@@ -3,10 +3,14 @@ require 'pp'
 require 'ostruct'
 require 'yaml'
 require 'jekyll'
-require 'hpricot'
 require 'date'
 require 'digest/md5'
 require 'action_view'
+require 'net/http'
+require 'net/https'
+require 'feedparser'
+require 'uri'
+
 include ActionView::Helpers::DateHelper
 
 # From http://api.rubyonrails.org/classes/ActiveSupport/CoreExtensions/Hash/Keys.html
@@ -23,23 +27,30 @@ end
 
 
 #
-# Parses a rss feed and returns items as an array.
+# Parses a rss/atom feed and returns items as an array.
 #
 class RSSFeed
   DEFAULT_TTL = 600
- class << self
+  class << self
     def tag(url, count = 15, ttl=DEFAULT_TTL)
       links = []
       url = "#{url}"
-      feed = Hpricot(open(url))
-      feed.search("item").take(count.to_i).each do |i|
+      uri=URI.parse(url)
+      http = Net::HTTP.new(uri.host, uri.port)
+      if uri.scheme == "https"
+	http.use_ssl = true
+	http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+      end
+      request = Net::HTTP::Get.new(uri.request_uri)
+      response = http.request(request)
+      f = FeedParser::Feed::new(response.body)
+      f.items.take(count.to_i).each do |i|
         item = OpenStruct.new
-        item.link = i.at('link').next.to_s
-        item.title = i.at('title').innerHTML
-	a=i.at('pubdate').innerHTML rescue nil
-	item.date=Date.parse(a)
-	item.day = time_ago_in_words(item.date)
-        item.description  = i.at('description').to_plain_text rescue nil
+	item.title = i.title
+	item.link = i.link
+	item.date = i.date
+	item.day = time_ago_in_words(i.date)
+	item.description = i.content
         links << item
       end
       links
@@ -71,23 +82,6 @@ class CachedRSSFeed < RSSFeed
   end
 end
 
-#
-# Usage:
-#   
-#      <ul class="rssfeed-links">
-#        {% rssfeed  url:url count:15 ttl:3600 %}
-#        <li><a href="{{ item.link }}" title="{{ item.description }}" rel="external">{{ item.title }}</a></li>
-#        {% endrssfeed %}
-#      </ul>
-#
-# This will fetch the last 15 bookmarks tagged with 'design' from account 'x' and cache them for 3600 seconds.
-# 
-# Parameters:
-#   url:      url of rss feed
-#             For example, business+tosite, will fetch boomarks tagged both business and tosite.
-#   count:    The number of bookmarks to fetch.
-#   ttl:      The number of seconds to cache the feed. If not set, the feed will be fetched always.
-#
 module Jekyll
   class RSSFeedTag < Liquid::Block
 
@@ -105,7 +99,7 @@ module Jekyll
           @attributes[key] = value
         end
       else
-        raise SyntaxError.new("Syntax Error in 'rssfeed' - Valid syntax: rss uid:x count:x]")
+        raise SyntaxError.new("Syntax Error in 'rssfeed' - Valid syntax: rssfeed uid:x count:x]")
       end
 
       @ttl = @attributes.has_key?('ttl') ? @attributes['ttl'].to_i : nil
@@ -128,7 +122,7 @@ module Jekyll
       length = collection.length
       result = []
               
-      # loop through found dents and render results
+      # loop through found items and render results
       context.stack do
         collection.each_with_index do |item, index|
           attrs = item.send('table')
@@ -153,23 +147,3 @@ end
 
 Liquid::Template.register_tag('rssfeed', Jekyll::RSSFeedTag)
 
-if __FILE__ == $0
-  require 'test/unit'
-
-  class TC_MyTest < Test::Unit::TestCase
-    def setup
-      @result = RSSFeed::tag('37signals', 'svn', 5)
-    end
-
-    def test_size
-      assert_equal(@result.size, 5)
-    end
-
-    def test_bookmark
-      bookmark = @result.first
-      assert_equal(bookmark.title, 'Mike Rundle: "I now realize why larger weblogs are switching to WordPress...')
-      assert_equal(bookmark.description, "...when a site posts a dozen or more entries per day for the past few years, rebuilding the individual entry archives takes a long time. A long, long time. &amp;lt;strong&amp;gt;About 32 minutes each rebuild.&amp;lt;/strong&amp;gt;&amp;quot;")
-      assert_equal(bookmark.link, "http://businesslogs.com/business_logs/launch_a_socialites_life.php")
-    end
-  end
-end
