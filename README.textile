@@ -30,13 +30,13 @@ h2. Author
 
 "Christian Hellsten":http://christianhellsten.com ("Aktagon Ltd.":http://aktagon.com)
 
-h2. rssfeed
+h2. RSS/Atom Feed
 
-This Jekyll plugin is used for fetching and rendering  rss and atom feeds
+This Jekyll plugin is used for fetching and rendering RSS and Atom feeds.
 
 h3. Usage
 
-This will fetch the last 15 dents and cache them for 3600 seconds:
+This will fetch the last 15 entries and cache them for 3600 seconds:
 
 <pre><code>
   {% rssfeed url:https://github.com/cz8s.atom count:15 ttl:3600 %}
@@ -49,8 +49,8 @@ This will fetch the last 15 dents and cache them for 3600 seconds:
 h4. Parameters
 
 |Name|Description|Example|
-|url|where the feed is |https://github.com/cz8s.atom|
-|count|Number of Posts to show |15|
+|url|Feed URL |https://github.com/cz8s.atom|
+|count|Number of entries to show |15|
 |ttl|The number of seconds the feed is cached 3600 caches the feed for one hour. Leave empty to always fetch feed.|3600|
 
 h2. Author
